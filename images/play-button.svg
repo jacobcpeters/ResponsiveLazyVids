@@ -1,0 +1,33 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg viewBox="0 0 100 200" version="1.1" xmlns="http://www.w3.org/2000/svg" 
+    xml:space="preserve" x="0px" y="0px" width="100px" height="200px" background-color="#fff0" shape-rendering="geometricPrecision">
+    <defs>
+        <filter id="filter1" x="-100%" y="-100%" width="300%" height="300%">
+            <feColorMatrix result="out" in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.251 0"/>
+            <feMorphology result="out" in="out" operator="dilate" radius="1"/>
+            <feGaussianBlur result="out" in="out" stdDeviation="4"/>
+            <feBlend in="SourceGraphic" in2="out" mode="normal" result="Glow1"/>
+        </filter>
+        <filter id="filter2" x="-100%" y="-100%" width="300%" height="300%">
+            <feColorMatrix result="out" in="SourceGraphic" type="matrix" values="0 0 0 0.75 0 0 0 0 0.75 0 0 0 0 0.75 0 0 0 0 0.251 0"/>
+            <feMorphology result="out" in="out" operator="dilate" radius="1"/>
+            <feGaussianBlur result="out" in="out" stdDeviation="4"/>
+            <feBlend in="SourceGraphic" in2="out" mode="normal" result="Glow2"/>
+        </filter>
+        <filter id="filter3" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur result="out" in="SourceGraphic" stdDeviation="2"/>
+            <feBlend in="SourceGraphic" in2="out" mode="normal" result="Glow1"/>
+        </filter>
+    </defs>
+    <g>
+        <polygon filter="url(#filter1)" points="73,50 39,69 39,30" stroke="#888" stroke-width="1" fill="#fff"/>
+        <circle filter="url(#filter3)" cx="50" cy="50" r="37" stroke="#888" stroke-width="6.25" fill="none"/>
+        <circle cx="50" cy="50" r="37" stroke="#fff" stroke-width="5" fill="none"/>
+    </g>
+    <g>
+        <polygon filter="url(#filter2)" points="73,150 39,169 39,130" stroke="#999" stroke-width="1" fill="#fff"/>
+        <circle filter="url(#filter3)" cx="50" cy="150" r="37" stroke="#999" stroke-width="6.25" fill="none"/>
+        <circle cx="50" cy="150" r="37" stroke="#fff" stroke-width="5" fill="none"/>
+    </g>
+</svg>
