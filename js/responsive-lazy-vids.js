@@ -1,5 +1,5 @@
 /*!
-* ResponsiveLazyVids 1.1.0
+* ResponsiveLazyVids 1.1.1
 *
 * Copyright 2014, Jacob Peters - http://jacobpeters.co
 * Credit to:
@@ -61,6 +61,7 @@ var ResponsiveLazyVids = (function main() {
             if (iframe.hasAttribute('height')) {
                 iframe.removeAttribute('height');
             }
+            iframe.style.backgroundColor = '#000';
             
             switch (this.getAttribute('data-service')) {
                 case 'youtube':
