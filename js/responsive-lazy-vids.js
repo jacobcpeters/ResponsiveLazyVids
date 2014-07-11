@@ -3,9 +3,9 @@
 *
 * Copyright 2014, Jacob Peters - http://jacobpeters.co
 * Credit to:
-*   Chris Coyier - http://css-tricks.com + Dave Rupert - http://daverupert.com
-*   Thierry Koblentz - http://www.alistapart.com/articles/creating-intrinsic-ratios-for-video/
-* Released under the WTFPL license - http://sam.zoy.org/wtfpl/
+*   FitVids.js: Chris Coyier - http://css-tricks.com + Dave Rupert - http://daverupert.com
+*   Intrinsic Ratio Method: Thierry Koblentz - http://www.alistapart.com/articles/creating-intrinsic-ratios-for-video/
+* Released under the MIT license - http://opensource.org/licenses/MIT
 *
 */
 
