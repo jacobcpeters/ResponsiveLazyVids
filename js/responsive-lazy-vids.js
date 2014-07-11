@@ -1,5 +1,5 @@
 /*!
-* ResponsiveLazyVids 1.0
+* ResponsiveLazyVids 1.1.0
 *
 * Copyright 2014, Jacob Peters - http://jacobpeters.co
 * Credit to:
@@ -8,100 +8,46 @@
 * Released under the WTFPL license - http://sam.zoy.org/wtfpl/
 *
 */
+var rlv_object = {};
+rlv_object.plugin_url = './';
 
 var ResponsiveLazyVids = (function main() {
     "use strict";
     
     var uniqueInstance = 0,
-        videos = {};
+        videos = {},
+        callbacks = {};
     
-    
-    function video_loader(element) {
-        var video = element.getAttribute('data-video-url');
-        switch (element.getAttribute('data-service')) {
-            case 'youtube':
-                youtube_proxy_request(video, element);
-                break;
-            case 'vimeo':
-                vimeo_request(video, element);
-                break;
-            default:
-                console.error('Unknown video service: ' + element.getAttribute('data-service'));
-                break;
-        }
-        
-    }
-    
-    function vimeo_request(video, element) {
-        var script = document.createElement('script'),
-            name = 'rlv' + uniqueInstance++,
-            body = document.body || document.getElementsByTagName('body')[0];
+    function request_init(element) {
+        var clbkName = 'rlv' + uniqueInstance++;
 
-        script.src = encodeURI('http://vimeo.com/api/oembed.json?url=') +
-                               video + encodeURI('&callback=' + name);
-        body.appendChild(script);
-
-        window[name] = function(data){
-            element.setAttribute('data-unique-instance', name);
+        callbacks[clbkName] = function(data){
+            element.setAttribute('data-unique-instance', clbkName);
             element_setup.call((element), data);
-            body.removeChild(script);
-            script = null;
-
-            delete window[name];
+            delete callbacks[clbkName];
         };
-    }
-    
-    function youtube_proxy_request(video, element) {
-        var script = document.createElement('script'),
-            name = 'rlv' + uniqueInstance++,
-            body = document.body || document.getElementsByTagName('body')[0];
-
-        script.src = encodeURI(rlv_object.plugin_url + '/oembed-proxy.php' +
-                               '?video=') + video +
-                               encodeURI('&callback=' + name);
-        body.appendChild(script);
-
-        window[name] = function(data){
-            element.setAttribute('data-unique-instance', name);
-            element_setup.call((element), data);
-            body.removeChild(script);
-            script = null;
-
-            delete window[name];
-        };
-    }
-    
-    function youtube_yql_request(video, element) {
-        var query = encodeURIComponent('SELECT * FROM json WHERE url="' + 
-                    'http://www.youtube.com/oembed?url=' +
-                    video + '&format=json"'),
-            script = document.createElement('script'),
-            name = 'rlv' + uniqueInstance++,
-            body = document.body || document.getElementsByTagName('body')[0];
         
-        script.src = encodeURI('http://query.yahooapis.com/v1/public/yql' +
-                        '?format=json&jsonCompat=new&diagnostics=false' +
-                        '&q=') + query +
-                        encodeURI('&callback=' + name);
-        body.appendChild(script);
-        
-        window[name] = function(data){
-            element.setAttribute('data-unique-instance', name);
-            element_setup.call((element), data.query.results.json);
-            body.removeChild(script);
-            script = null;
-            
-            delete window[name];
-        };
+        return clbkName + ',' + element.getAttribute('data-service') + ',' + element.getAttribute('data-video-url');
     }
     
     function element_setup(data) {
-        var aspectRatio = (data.height/data.width)*100;
+        var aspectRatio = (data.height/data.width)*100,
+            button = document.createElement('div'),
+            title = document.createElement('div');
         videos[this.getAttribute('data-unique-instance')] = data.html;
+        this.setAttribute('data-title', data.title);
         
         this.style.backgroundImage = 'url(' + data.thumbnail_url + ')';
         this.style.paddingTop = aspectRatio + '%';
-        this.appendChild(document.createElement('div'));
+        
+        button.className = 'button';
+        title.className = 'title';
+        title.innerHTML = data.title;
+        this.appendChild(button);
+        this.appendChild(title);
+        button = null;
+        title = null;
+        
         
         addEventListener(this, 'click', function finish_loading() {
             var tempdiv = document.createElement('div'),
@@ -131,6 +77,7 @@ var ResponsiveLazyVids = (function main() {
             
             
             this.removeChild(this.firstChild);
+            this.removeChild(this.firstChild);
             this.appendChild(iframe);
             this.style.backgroundImage = '';
         });
@@ -146,23 +93,48 @@ var ResponsiveLazyVids = (function main() {
         }
     }
     
-    if(!document.getElementById('responsive-lazy-vids-style')) {
-        // appendStyles: https://github.com/toddmotto/fluidvids/blob/master/dist/fluidvids.js
-        var head = document.head || document.getElementsByTagName('head')[0],
-            css = '.responsive-lazy-vids-container{width:100%;position:relative;padding:0;cursor:pointer;background-position:center;background-repeat: no-repeat;background-size:101% auto;}.responsive-lazy-vids-container iframe,.responsive-lazy-vids-container object,.responsive-lazy-vids-container embed {position:absolute;top:0;left:0;width:100%;height:100%;}',
-            playButtonCss = ' .responsive-lazy-vids-container > div{width:100px;height:100px;position:absolute;top:50%;left:50%;-webkit-transform: translateX(-50%) translateY(-50%);-o-transform: translateX(-50%) translateY(-50%);transform: translateX(-50%) translateY(-50%);background:url('+ rlv_object.plugin_url +'/images/play-button.svg);background-repeat:no-repeat;} .responsive-lazy-vids-container:hover > div {background-position:0% 100%;}';
-            div = document.createElement('div');
-        div.innerHTML = '<p>x</p><style id="fit-vids-style">' + css + playButtonCss + '</style>';
-        head.appendChild(div.childNodes[1]);
-    }
+    
     
     (function execute () {
-        var videos = document.querySelectorAll('.responsive-lazy-vids-container');
-        for (var i = 0; i < videos.length; ++i) {
-            video_loader(videos[i]);
+        var videos = document.querySelectorAll('.responsive-lazy-vids-container'),
+            request_queue = [],
+            request;
+        //add CSS styles
+        if(!document.getElementById('responsive-lazy-vids-style')) {
+            // appendStyles: https://github.com/toddmotto/fluidvids/blob/master/dist/fluidvids.js
+            var head = document.head || document.getElementsByTagName('head')[0],
+                css = '.responsive-lazy-vids-container{width:100%;position:relative;padding:0;cursor:pointer;background-position:center;background-repeat: no-repeat;background-size:101% auto;}.responsive-lazy-vids-container iframe,.responsive-lazy-vids-container object,.responsive-lazy-vids-container embed {position:absolute;top:0;left:0;width:100%;height:100%;}',
+                titleCss = '.responsive-lazy-vids-container > .title{width: 100%;position: absolute;top:0;padding: 0.25em 0.5em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#eee;background:rgba(0, 0, 0, 0.57)}',
+                playButtonCss = ' .responsive-lazy-vids-container > .button{width:100px;height:100px;position:absolute;top:50%;left:50%;-webkit-transform: translateX(-50%) translateY(-50%);-o-transform: translateX(-50%) translateY(-50%);transform: translateX(-50%) translateY(-50%);background:url('+ rlv_object.plugin_url +'/images/play-button.svg);background-repeat:no-repeat;} .responsive-lazy-vids-container:hover > .button {background-position:0% 100%;}',
+                div = document.createElement('div');
+            div.innerHTML = '<p>x</p><style id="fit-vids-style">' + css + playButtonCss + titleCss + '</style>';
+            head.appendChild(div.childNodes[1]);
         }
+        for (var i = 0; i < videos.length; ++i) {
+            request_queue.push(request_init(videos[i]));
+        }
+        
+        request = new XMLHttpRequest();
+        request.open('POST', rlv_object.plugin_url + '/oembed-multi.php', true);
+        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+        
+        request.onreadystatechange = function() {
+            if (this.readyState === 4){
+                if (this.status >= 200 && this.status < 400){
+                    var data = JSON.parse(this.responseText);
+                    for (var i = 0; i < data.length; ++i) {
+                        callbacks[data[i].callback](data[i].data);
+                    }
+                } else {
+
+                }
+            }
+        };
+
+        request.send('videos=' + request_queue.join(',,'));
+        request = null;
     }());
     
-    return video_loader;
+    return execute;
 }());
 

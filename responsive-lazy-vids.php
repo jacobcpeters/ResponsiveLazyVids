@@ -2,7 +2,7 @@
 /** 
 Plugin Name: Responsive Lazy Vids
 Description: A plugin for retrieving and responsively embeding YouTube and Vimeo videos through oEmbed endpoints. 
-Version: 1.01
+Version: 1.1.0
 Author: Jacob Peters
 Copyright: 2014
 Author URI: http://jacobpeters.co
