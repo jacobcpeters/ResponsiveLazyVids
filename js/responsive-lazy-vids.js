@@ -1,5 +1,5 @@
 /*!
-* ResponsiveLazyVids 1.1.1
+* ResponsiveLazyVids 1.2.1
 *
 * Copyright 2014, Jacob Peters - http://jacobpeters.co
 * Credit to:
@@ -94,7 +94,7 @@ var ResponsiveLazyVids = (function main() {
     
     
     
-    (function execute () {
+    var execute = (function execute () {
         var videos = document.querySelectorAll('.responsive-lazy-vids-container'),
             request_queue = [],
             request;
@@ -102,7 +102,7 @@ var ResponsiveLazyVids = (function main() {
         if(!document.getElementById('responsive-lazy-vids-style')) {
             // appendStyles: https://github.com/toddmotto/fluidvids/blob/master/dist/fluidvids.js
             var head = document.head || document.getElementsByTagName('head')[0],
-                css = '.responsive-lazy-vids-container{width:100%;position:relative;padding:0;cursor:pointer;background-position:center;background-repeat: no-repeat;background-size:101% auto;}.responsive-lazy-vids-container iframe,.responsive-lazy-vids-container object,.responsive-lazy-vids-container embed {position:absolute;top:0;left:0;width:100%;height:100%;}',
+                css = '.responsive-lazy-vids-container{width:100%;position:relative;padding:52.65% 0 0;cursor:pointer;background-color:#000;background-position:center;background-repeat: no-repeat;background-size:101% auto;}.responsive-lazy-vids-container iframe,.responsive-lazy-vids-container object,.responsive-lazy-vids-container embed {position:absolute;top:0;left:0;width:100%;height:100%;}',
                 titleCss = '.responsive-lazy-vids-container > .title{width: 100%;position: absolute;top:0;padding: 0.25em 0.5em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#eee;background:rgba(0, 0, 0, 0.57)}',
                 playButtonCss = ' .responsive-lazy-vids-container > .button{width:100px;height:100px;position:absolute;top:50%;left:50%;-webkit-transform: translateX(-50%) translateY(-50%);-o-transform: translateX(-50%) translateY(-50%);transform: translateX(-50%) translateY(-50%);background:url('+ rlv_object.plugin_url +'/images/play-button.svg);background-repeat:no-repeat;} .responsive-lazy-vids-container:hover > .button {background-position:0% 100%;}',
                 div = document.createElement('div');
