@@ -8,8 +8,6 @@
 * Released under the WTFPL license - http://sam.zoy.org/wtfpl/
 *
 */
-var rlv_object = {};
-rlv_object.plugin_url = './';
 
 var ResponsiveLazyVids = (function main() {
     "use strict";
