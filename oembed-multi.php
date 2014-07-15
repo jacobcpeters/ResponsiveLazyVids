@@ -1,4 +1,7 @@
 <?php
+
+require_once('oembed-cache.php');
+
 $oembed_services = array('youtube'     => 'http://www.youtube.com/oembed?format=json&url=',
                          'vimeo'       => 'http://vimeo.com/api/oembed.json?url=',
                          'viddler'     => 'http://www.viddler.com/oembed/?format=json&url=',
@@ -28,7 +31,7 @@ function parse_videos($videos) {
     foreach ($videos as $video){
         $temp = explode(',', $video);
         $requests[] = array('callback'=>$temp[0], 'url'=>$oembed_services[$temp[1]] . $temp[2],
-                            'data'=>'', 'ch'=> null);
+                            'data'=>'', 'ch'=> null, 'cached' => false);
     }
     return $requests;
 }
@@ -42,41 +45,58 @@ function format_output($requests) {
 }
 
 function get_oembed_multi($videos) {
+    $can_cache = caching_available();
+    
     $requests = parse_videos($videos);
-    
-    $multi = curl_multi_init();
-    
-    foreach ($requests as &$request) {
-        $request['ch'] = curl_init();
-        curl_setopt($request['ch'], CURLOPT_URL, $request['url']);
-        curl_setopt($request['ch'], CURLOPT_HEADER, false);
-        curl_setopt($request['ch'], CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($request['ch'], CURLOPT_SSL_VERIFYHOST, 2);
-        curl_setopt($request['ch'], CURLOPT_CAINFO, __DIR__ . '/cacert.pem');
+    $some_requests_are_uncached = false;
 
-        curl_multi_add_handle($multi, $request['ch']);
-    }
-                    
-    $active = null;
-    do {
-        $mrc = curl_multi_exec($multi, $active);
-    } while ($mrc == CURLM_CALL_MULTI_PERFORM);
+    
+    if ( !$can_cache || !cache_lookup($requests) ) {
+        $multi = curl_multi_init();
 
-    while ($active && $mrc == CURLM_OK) {
+        foreach ($requests as &$request) {
+            if ( $request['cached'] ) {
+                continue;
+            }
+            $request['ch'] = curl_init();
+            curl_setopt($request['ch'], CURLOPT_URL, $request['url']);
+            curl_setopt($request['ch'], CURLOPT_HEADER, false);
+            curl_setopt($request['ch'], CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($request['ch'], CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($request['ch'], CURLOPT_CAINFO, __DIR__ . '/cacert.pem');
+
+            curl_multi_add_handle($multi, $request['ch']);
+        }
+
+        $active = null;
         do {
             $mrc = curl_multi_exec($multi, $active);
         } while ($mrc == CURLM_CALL_MULTI_PERFORM);
-    }
 
-    // Loop through the channels and retrieve the received
-    // content, then remove the handle from the multi-handle
-    foreach ($requests as &$request) {
-        $request['data'] = curl_multi_getcontent($request['ch']);
-        curl_multi_remove_handle($multi, $request['ch']);
-    }
+        while ($active && $mrc == CURLM_OK) {
+            do {
+                $mrc = curl_multi_exec($multi, $active);
+            } while ($mrc == CURLM_CALL_MULTI_PERFORM);
+        }
 
-    // Close the multi-handle and return our results
-    curl_multi_close($multi);
+        // Loop through the channels and retrieve the received
+        // content, then remove the handle from the multi-handle
+        foreach ($requests as &$request) {
+            if ( $request['cached'] ) {
+                continue;
+            }
+            $request['data'] = curl_multi_getcontent($request['ch']);
+            curl_multi_remove_handle($multi, $request['ch']);
+        }
+        
+        // Close the multi-handle and return our results
+        curl_multi_close($multi);
+        
+        //Add responses to cache
+        if ( $can_cache ) {
+            add_to_cache($requests);
+        }
+    }
     
     return format_output($requests);
 }
