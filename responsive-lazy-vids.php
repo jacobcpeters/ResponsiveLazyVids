@@ -24,6 +24,8 @@ function rlvids( $atts ) {
         return;
     } 
     
+    //Video service handlers
+    //TODO: Remove Justin.tv and research Hitbox for possible addition.
     if (stristr($atts['video'], 'youtube.com') || stristr($atts['video'], 'yout.be')) {
         $service = 'youtube';
     } elseif (stristr($atts['video'], 'vimeo.com')) {

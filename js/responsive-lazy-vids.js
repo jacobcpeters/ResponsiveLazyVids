@@ -7,6 +7,7 @@
 *   Intrinsic Ratio Method: Thierry Koblentz - http://www.alistapart.com/articles/creating-intrinsic-ratios-for-video/
 * Released under the MIT license - http://opensource.org/licenses/MIT
 *
+* TODO: Get rid of the JSON-P code. It's legacy from when this script was calling the oembed endpoints directly.
 */
 
 var ResponsiveLazyVids = (function main() {
@@ -28,6 +29,7 @@ var ResponsiveLazyVids = (function main() {
         return clbkName + ',' + element.getAttribute('data-service') + ',' + element.getAttribute('data-video-url');
     }
     
+    //Creates the element that loads the embed on click
     function element_setup(data) {
         var aspectRatio = (data.height/data.width)*100,
             button = document.createElement('div'),
@@ -51,10 +53,14 @@ var ResponsiveLazyVids = (function main() {
             var tempdiv = document.createElement('div'),
                 iframe;
             
+            //Place iframe HTML in a temporary div and extract the element
+            //TODO: This is ugly, but I'm not sure if using a regex to strip the data is less so.
+            //  It might not be faster either since the div isn't in the document flow.
             tempdiv.innerHTML = videos[this.getAttribute('data-unique-instance')];
             iframe = tempdiv.firstChild
             tempdiv = null;
             
+            //Width and Height attributes mess with the responsiveness so remove them.
             if (iframe.hasAttribute('width')) {
                 iframe.removeAttribute('width');
             }
@@ -63,6 +69,8 @@ var ResponsiveLazyVids = (function main() {
             }
             iframe.style.backgroundColor = '#000';
             
+            //Autoplay set for YouTube and Vimeo so videos start with only one click
+            //TODO: Add autoplay for other services if available.
             switch (this.getAttribute('data-service')) {
                 case 'youtube':
                     iframe.src += '&autoplay=1'
@@ -82,6 +90,7 @@ var ResponsiveLazyVids = (function main() {
         });
     }
     
+    //Old browser compatibility function.
     function addEventListener(el, eventName, handler) {
         if (el.addEventListener) {
             el.addEventListener(eventName, handler);
@@ -93,7 +102,7 @@ var ResponsiveLazyVids = (function main() {
     }
     
     
-    
+    //find requested embeds, add resposive styles, and send request for oembed data.
     var execute = (function execute () {
         var videos = document.querySelectorAll('.responsive-lazy-vids-container'),
             request_queue = [],
@@ -113,6 +122,8 @@ var ResponsiveLazyVids = (function main() {
             request_queue.push(request_init(videos[i]));
         }
         
+        //TODO: Add compatibility for older browsers. 
+        //  This wasn't a requirement for the original project, but could be useful going forward.
         request = new XMLHttpRequest();
         request.open('POST', rlv_object.plugin_url + '/oembed-multi.php', true);
         request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');

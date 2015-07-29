@@ -1,4 +1,11 @@
 <?php
+/**
+ * Caches retrieved oembed data using sqlite
+ *
+ * TODO: Find a way to use Wordpress DB without executing Wordpress
+ *
+ * 
+ */
 
 function caching_available() {
     $loaded_extensions = get_loaded_extensions();
